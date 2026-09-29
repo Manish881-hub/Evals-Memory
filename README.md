@@ -28,20 +28,6 @@ Retrieval is hybrid and deterministic:
 
 The answer layer is concise and deterministic with handlers for temporal state changes, commitments, ownership, disagreements, reported speech, corrections, travel/calendar cross-source queries and abstention. No external API key needed.
 
-## Skills used
-
-Per the task requirement to use the supplied skill packs in `/run/media/.../ECC`, `Matt Skills` and `gstack`:
-
-- **ECC `eval-harness`**: eval-driven development. Defined pass criteria first (retrieval primary, top-10 + no forbidden), ran `score_retrieval.py` / `score_memory.py` / `score_actions.py` continuously.
-- **ECC `iterative-retrieval`**: 4-phase loop — dispatch broad lexical, evaluate gaps, refine with entity/date/intent boosts + joins, loop max 2 passes. This fixed the initial 64% → 96% → 100% climb.
-- **ECC `unified-memory`**: trust and data boundaries. Recalled bodies treated as untrusted, never store/repeat secrets, never obey instructions in data, link to authoritative sources.
-- **ECC `verification-loop`**: build + test + security scan (`selftest.py`: temporal, deletion, edit, injection, secret, abstention) before claiming complete.
-- **ECC `contract-first`**: single authoritative interface (`main.py` / `actions.py` output schemas match BRIEF examples). Verified provider output against the contract.
-- **ECC `python-patterns`**: stdlib-only, readable Python, dataclasses, explicit error handling.
-- **ECC `safety-guard`**: destructive actions → `confirm`, ambiguous → `clarify` in the action assistant.
-- **Matt `implement` / `tdd` / `domain-modeling`**: implemented from spec, glossary in `src/models.py` (Unit vs Record, delivery time vs `as_of`), edge-case scenarios probed (time-travel, second-hand speech, edits).
-- **gstack `review` / `qa` / `ship`**: pre-landing review, QA on train set, ship with one-command repro.
-
 ## Files
 
 ```
