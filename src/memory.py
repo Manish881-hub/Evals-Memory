@@ -5,7 +5,7 @@ from datetime import datetime
 
 from .answers import answer_question
 from .ingest import load_all, visible_at
-from .retrieval import retrieve
+from .retrieval import retrieve_with_scores
 
 
 class MemorySystem:
@@ -17,8 +17,9 @@ class MemorySystem:
         as_of = datetime.fromisoformat(as_of_s)
         visible = visible_at(self.units, self.deleted, self.edits, as_of)
         vis_by_id = {u.id: u for u in visible}
-        retrieved = retrieve(question, visible, top_k=20)
-        answer, sources, abstained = answer_question(question, as_of, vis_by_id)
+        retrieved, scores = retrieve_with_scores(question, visible, top_k=20)
+        answer, sources, abstained = answer_question(
+            question, as_of, vis_by_id, retrieved, scores)
         # ensure sources are subset of visible and not forbidden; filter just in case
         clean_sources = []
         for s in sources:

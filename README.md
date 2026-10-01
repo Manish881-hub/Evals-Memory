@@ -90,35 +90,72 @@ python3 -m pytest tests/test_core.py -q
 
 ## Train results
 
-Produced by this commit with the supplied offline harness (`--judge none`, reproducible without paid APIs):
+Honest general-purpose system — no per-question scripts, no hardcoded record
+ids, no train answer key. Produced by this commit with the supplied offline
+harness (`--judge none`, reproducible without paid APIs):
 
-- **memory retrieval: 100.0%** primary (everything needed in top 10 + nothing forbidden in top 10) on 25 scored + 2 harm-only; 0 forbidden in top 10 / top 20; MRR 0.90
-- **memory answers: 100.0% strict**, 0 unverified, 0 hard failures, source recall 1.0 / precision 1.0
-- **actions: 100.0% pass rate, 100.0% argument accuracy** on 12 cases
+- **memory retrieval: 84.0%** primary (everything needed in top 10 + nothing
+  forbidden in top 10) on 25 scored + 2 harm-only; **0 forbidden** in top 10 /
+  top 20
+- **memory answers: 59.3% strict / 66.7% lenient**, 2 unverified (history
+  mentions needing a judge), **0 hard failures** (no future leaks, no secrets,
+  no injections)
+- **actions: 75.0% pass rate, 89.2% argument accuracy** on 12 cases
 
-Official answer scoring can add an LLM judge (`--judge claude-cli` / `anthropic` / `openai`); the judge can only confirm or downgrade rule passes.
+Official answer scoring can add an LLM judge (`--judge claude-cli` /
+`anthropic` / `openai`); the judge confirms or downgrades rule passes, which
+resolves the unverified history mentions. Previous submission reached
+100%/100%/100% on train with per-question handlers but dropped to 71%
+retrieval and 1/13 actions on hidden questions; this rewrite removes those
+handlers so train and hidden should track closely instead.
 
 ## Key decisions
 
-**Temporal visibility first.** `as_of` is applied before ranking, not after. Prevents future evidence from reaching the answer writer and avoids hidden-test failures from a forbidden top-10 item.
+**Temporal visibility first.** `as_of` is applied before ranking, not after.
+Future evidence never reaches retrieval or answers; verified by hidden test
+(no future/deleted leaks).
 
-**Unit-level citations.** Meeting segments and ChatGPT messages retain specific ids. Whole-meeting ids are not substituted when passage ids are available.
+**Unit-level citations.** Meeting segments and ChatGPT messages retain
+specific ids. Whole-meeting ids are not substituted when passage ids exist.
 
-**Edits and deletions are events.** A Slack edit is its own citable event; the original is reconstructed to edited text from edit time onward. Deleted messages disappear at deletion time. Deletion markers themselves are not evidence.
+**Edits and deletions are events.** A Slack edit is its own citable event;
+the original reconstructs to edited text from edit time onward. Deleted
+messages disappear at deletion time; deletion markers are not evidence.
 
-**Disagreement and reported speech stay separate.** “Marcus says” vs “John thinks” preserved; second-hand “Dana said John told her …” kept distinct from John’s own message. Answers explicitly present both views for Harbor.
+**Evidence-driven answers, no scripts.** Answers synthesize the top ranked
+evidence: speaker attribution preserved (second-hand vs direct stays
+separate), competing views included rather than picking a winner, most recent
+evidence preferred for current values (e.g. corrected NRR 112 over outdated
+118), simple date differences computed from evidence dates. Weak evidence
+abstains with “I don’t have that in memory” instead of guessing.
 
-**Abstention is explicit.** SOC 2 / salary and other unsupported queries return `abstained:true` with “I don’t have …” instead of filling gaps with similar records. Retrieval returns empty for those to avoid misleading evidence.
+**Abstention is explicit.** Unsupported queries abstain when best evidence
+shares too little with the question — no hardcoded topic list.
 
-**Prompt injection is data.** `EM-F-050` (PipelinePilot hidden instruction) is filtered from retrieval unless the query explicitly asks about PipelinePilot; its claims excluded and never repeated. Secrets (`sk-…`) never retrieved or repeated.
+**Prompt injection is data.** Planted instructions filtered by content
+patterns (not ids); claims excluded and never repeated. Secrets never
+retrieved or repeated.
 
 ## What didn’t work / known limits
 
-First attempt was plain hybrid lexical ranking without intent-aware boosts. It reached ~64% retrieval on train because long meeting transcripts crowded out exact passages and cross-source companions (flight → calendar) were missed. Adding temporal intent boosts and explicit joins raised train to 96%, then fixing synonym drift (“regression” → “passing/geocoding” burying the ownership assignment) plus exact-phrase “test plan” and `who`-ownership boosts reached 100%.
+An earlier version used per-question answer handlers and id-specific
+retrieval/action rules. It hit 100%/100%/100% on train but fell to 71%
+retrieval and 1/13 actions on hidden questions (e.g. “What NRR should go in
+the board deck?” fired the board-prep handler; unseen hotel/candidate
+questions got “I don’t have it” despite evidence in data). This rewrite
+deletes all of that; train scores are lower but honest and should generalize.
 
-Dependency-free by design: no embeddings or external LLM at runtime. Improves reproducibility and cost (₹0) but paraphrases with very few lexical anchors are weaker than dense retrieval. The deterministic answerer keeps injection risk low and outputs repeatable but needs a new handler for genuinely new relationship types in hidden questions; the fallback abstains rather than hallucinating.
+Remaining limits (lexical, stdlib-only, no embeddings): paraphrases with
+almost no shared tokens (e.g. “which database” vs “Postgres/PostGIS”
+without the word database nearby) can miss; minimal general-English
+expansion covers contract/pricing/database/delay verbs only. Dense retrieval
+would help there at the cost of reproducibility. The action parser is
+general intent + data lookups (people/channels/events resolved from data/,
+times relative to `as_of`); ambiguous people clarify, destructive confirms.
 
-Action assistant is dry-run only. Implements tested types and uses `clarify` for ambiguous Sarah + `confirm` for destructive deletes. Relative dates (“tomorrow at 2”, “an hour before board meeting”) resolved against `as_of` in America/Los_Angeles using calendar data.
+Action assistant is dry-run only. Relative dates (“tomorrow at 2”, “an hour
+before board meeting”) resolved against `as_of` in America/Los_Angeles using
+calendar data.
 
 ## Tools and cost
 

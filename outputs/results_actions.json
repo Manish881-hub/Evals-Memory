@@ -1,8 +1,8 @@
 {
   "summary": {
     "n": 12,
-    "pass_rate": 1.0,
-    "arg_accuracy": 1.0
+    "pass_rate": 0.75,
+    "arg_accuracy": 0.8919
   },
   "items": [
     {
@@ -15,7 +15,7 @@
           "type": "slack.send_message",
           "args": {
             "to": "U03SARAHK",
-            "text": "Hi Sarah, the geocoding fix looks good. Thanks for the quick turnaround!"
+            "text": "the geocoding fix looks good"
           }
         }
       ]
@@ -23,17 +23,23 @@
     {
       "id": "ACT-TR-02",
       "command": "Email Sarah Patel and ask if she's had a chance to look at the proposal",
-      "pass": true,
-      "arg_accuracy": 1.0,
+      "pass": false,
+      "arg_accuracy": 0.333,
       "predicted": [
         {
           "type": "gmail.send",
           "args": {
             "to": [
-              "sarah.patel@acmefreight.example.com"
+              "sarah.kim@brightline.example.com"
             ],
-            "subject": "Re: Brightline pricing proposal",
-            "body": "Hi Sarah, just checking if you've had a chance to look at the pricing proposal. Let me know if you need anything. Thanks, Alex"
+            "subject": "Email Sarah Patel",
+            "body": "Email Sarah Patel"
+          }
+        },
+        {
+          "type": "clarify",
+          "args": {
+            "question": "Could you clarify: ask if she's had a chance to look at the proposal?"
           }
         }
       ]
@@ -47,7 +53,7 @@
         {
           "type": "reminder.create",
           "args": {
-            "text": "Follow up with Acme (Sarah Patel) on the proposal",
+            "text": "Remind me to follow up with Acme on the 25th at 9am",
             "due": "2026-09-25T09:00:00-07:00"
           }
         }
@@ -93,7 +99,7 @@
           "type": "slack.send_message",
           "args": {
             "to": "C10RP",
-            "text": "Team, we're launching Route Planner v2 on October 21."
+            "text": "Tell the route planner channel we're launching October 21"
           }
         }
       ]
@@ -107,7 +113,7 @@
         {
           "type": "calendar.create_event",
           "args": {
-            "title": "NRR fix",
+            "title": "the NRR fix",
             "start": "2026-09-17T14:00:00-07:00",
             "end": "2026-09-17T14:30:00-07:00",
             "attendees": [
@@ -126,7 +132,7 @@
         {
           "type": "memory.ask",
           "args": {
-            "question": "When is Route Planner v2 launching?"
+            "question": "What's our launch date again?"
           }
         }
       ]
@@ -134,13 +140,14 @@
     {
       "id": "ACT-TR-09",
       "command": "Message Sarah about the pricing proposal",
-      "pass": true,
-      "arg_accuracy": 1.0,
+      "pass": false,
+      "arg_accuracy": 0.0,
       "predicted": [
         {
-          "type": "clarify",
+          "type": "slack.send_message",
           "args": {
-            "question": "Which Sarah do you mean - Sarah Patel (Acme) or Sarah Kim (engineering)?"
+            "to": "U03SARAHK",
+            "text": "Message Sarah about the pricing proposal"
           }
         }
       ]
@@ -157,15 +164,15 @@
             "to": [
               "john@brightline.example.com"
             ],
-            "subject": "Corrected NRR",
-            "body": "Hi John, corrected NRR is 112% (dashboard double-counted one expansion). Thanks, Alex"
+            "subject": "Email John the corrected NRR",
+            "body": "Email John the corrected NRR (NRR is 112%)"
           }
         },
         {
           "type": "slack.send_message",
           "args": {
             "to": "U06BEN",
-            "text": "Thanks Ben for fixing the NRR dashboard!"
+            "text": "thank Ben on Slack"
           }
         }
       ]
@@ -187,14 +194,14 @@
     {
       "id": "ACT-TR-12",
       "command": "Remind me an hour before the board meeting to print the deck",
-      "pass": true,
-      "arg_accuracy": 1.0,
+      "pass": false,
+      "arg_accuracy": 0.667,
       "predicted": [
         {
           "type": "reminder.create",
           "args": {
-            "text": "Print the deck for the board meeting",
-            "due": "2026-09-23T08:00:00-07:00"
+            "text": "Remind me an hour before the board meeting to print the deck",
+            "due": "2026-09-18T09:00:00-07:00"
           }
         }
       ]
